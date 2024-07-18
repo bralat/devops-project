@@ -71,6 +71,7 @@ resource "aws_route_table_association" "private" {
 resource "aws_security_group" "alb" {
   name        = "alb-sg"
   description = "Prod ALB"
+  vpc_id      = aws_vpc.vpc.id
 
   egress {
     from_port   = 0
@@ -90,6 +91,7 @@ resource "aws_security_group" "alb" {
 resource "aws_security_group" "database" {
   name        = "database-sg"
   description = "Prod database SG"
+  vpc_id      = aws_vpc.vpc.id
 
   egress {
     from_port   = 0
@@ -109,6 +111,7 @@ resource "aws_security_group" "database" {
 resource "aws_security_group" "api" {
   name        = "api-sg"
   description = "Prod API SG"
+  vpc_id      = aws_vpc.vpc.id
 
   egress {
     from_port   = 0
