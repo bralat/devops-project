@@ -25,7 +25,10 @@ resource "aws_ecs_service" "helloworld" {
   deployment_maximum_percent         = 200
 
   network_configuration {
-    subnets          = [aws_subnet.public.id]
+    subnets = [
+      aws_subnet.public-eu-west-2a.id,
+      aws_subnet.public-eu-west-2b.id
+    ]
     security_groups  = [aws_security_group.api.id]
     assign_public_ip = true
   }

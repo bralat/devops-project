@@ -1,8 +1,11 @@
 resource "aws_lb" "api" {
   name               = "api"
   load_balancer_type = "application"
-  subnets            = [aws_subnet.public.id]
-  security_groups    = [aws_security_group.alb.id]
+  subnets = [
+    aws_subnet.public-eu-west-2a.id,
+    aws_subnet.public-eu-west-2b.id
+  ]
+  security_groups = [aws_security_group.alb.id]
 }
 
 resource "aws_lb_listener" "http" {

@@ -4,10 +4,17 @@ resource "aws_vpc" "vpc" {
   enable_dns_hostnames = true
 }
 
-resource "aws_subnet" "public" {
+resource "aws_subnet" "public-eu-west-2a" {
   vpc_id                  = aws_vpc.vpc.id
   cidr_block              = "10.0.0.0/20"
   availability_zone       = "eu-west-2a"
+  map_public_ip_on_launch = true
+}
+
+resource "aws_subnet" "public-eu-west-2b" {
+  vpc_id                  = aws_vpc.vpc.id
+  cidr_block              = "10.0.128.0/20"
+  availability_zone       = "eu-west-2b"
   map_public_ip_on_launch = true
 }
 
@@ -28,7 +35,7 @@ resource "aws_eip" "eip" {
 
 resource "aws_nat_gateway" "nat" {
   allocation_id = aws_eip.eip.id
-  subnet_id     = aws_subnet.public.id
+  subnet_id     = aws_subnet.public-eu-west-2a.id
 }
 
 resource "aws_route_table" "public" {
@@ -43,7 +50,7 @@ resource "aws_route" "public_gateway" {
 
 resource "aws_route_table_association" "public" {
   route_table_id = aws_route_table.public.id
-  subnet_id      = aws_subnet.public.id
+  subnet_id      = aws_subnet.public-eu-west-2a.id
 }
 
 resource "aws_route_table" "private" {
