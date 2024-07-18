@@ -1,2 +1,5 @@
 .idea
 .terraform
+*.tfvars
+*.tfstate*
+*.hcl
