@@ -6,14 +6,14 @@ resource "aws_vpc" "vpc" {
 
 resource "aws_subnet" "public" {
   vpc_id                  = aws_vpc.vpc.id
-  cidr_block              = "10.0.1.0/16"
+  cidr_block              = "10.0.0.0/20"
   availability_zone       = "eu-west-2a"
   map_public_ip_on_launch = true
 }
 
 resource "aws_subnet" "private" {
   vpc_id                  = aws_vpc.vpc.id
-  cidr_block              = "10.0.2.0/16"
+  cidr_block              = "10.0.64.0/20"
   availability_zone       = "eu-west-2a"
   map_public_ip_on_launch = false
 }
