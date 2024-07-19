@@ -2,7 +2,7 @@ resource "aws_rds_cluster" "cluster" {
   cluster_identifier     = "production-database"
   engine                 = "aurora-mysql"
   engine_version         = "8.0.mysql_aurora.3.05.2"
-  availability_zones     = ["eu-west-2a"]
+  availability_zones     = ["eu-west-2a", "eu-west-2b", "eu-west-2c"]
   database_name          = "prod"
   port                   = 3306
   master_username        = var.rds_credentials.username
