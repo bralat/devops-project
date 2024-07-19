@@ -18,9 +18,16 @@ resource "aws_subnet" "public-eu-west-2b" {
   map_public_ip_on_launch = true
 }
 
-resource "aws_subnet" "private" {
+resource "aws_subnet" "private-eu-west-2a" {
   vpc_id                  = aws_vpc.vpc.id
-  cidr_block              = "10.0.64.0/20"
+  cidr_block              = "10.0.16.0/20"
+  availability_zone       = "eu-west-2a"
+  map_public_ip_on_launch = false
+}
+
+resource "aws_subnet" "private-eu-west-2b" {
+  vpc_id                  = aws_vpc.vpc.id
+  cidr_block              = "10.0.144.0/20"
   availability_zone       = "eu-west-2a"
   map_public_ip_on_launch = false
 }
@@ -65,7 +72,7 @@ resource "aws_route" "private_to_nat" {
 
 resource "aws_route_table_association" "private" {
   route_table_id = aws_route_table.private.id
-  subnet_id      = aws_subnet.private.id
+  subnet_id      = aws_subnet.private-eu-west-2b.id
 }
 
 resource "aws_security_group" "alb" {
