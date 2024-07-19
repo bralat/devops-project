@@ -28,7 +28,7 @@ resource "aws_db_subnet_group" "subnet_group" {
   name = "rds"
 
   subnet_ids = [
-    aws_subnet.public-eu-west-2a.id,
-    aws_subnet.public-eu-west-2b.id
+    aws_subnet.private-eu-west-2a.id,
+    aws_subnet.private-eu-west-2b.id
   ]
 }
