@@ -26,10 +26,10 @@ resource "aws_ecs_service" "helloworld" {
 
   network_configuration {
     subnets = [
-      aws_subnet.public-eu-west-2a.id
+      aws_subnet.private-eu-west-2a.id
     ]
     security_groups  = [aws_security_group.api.id]
-    assign_public_ip = true
+    assign_public_ip = false
   }
 
   load_balancer {

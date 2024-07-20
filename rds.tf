@@ -24,20 +24,11 @@ resource "aws_rds_cluster_instance" "replica" {
   ca_cert_identifier   = "rds-ca-rsa2048-g1"
 }
 
-resource "aws_db_subnet_group" "subnet_group_private" {
-  name = "rds_private"
-
-  subnet_ids = [
-    aws_subnet.private-eu-west-2a.id,
-    aws_subnet.private-eu-west-2b.id
-  ]
-}
-
 resource "aws_db_subnet_group" "subnet_group" {
   name = "rds"
 
   subnet_ids = [
-    aws_subnet.public-eu-west-2a.id,
-    aws_subnet.public-eu-west-2b.id
+    aws_subnet.private-eu-west-2a.id,
+    aws_subnet.private-eu-west-2b.id
   ]
 }
