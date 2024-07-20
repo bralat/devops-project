@@ -72,7 +72,7 @@ resource "aws_route" "private_to_nat" {
 
 resource "aws_route_table_association" "private" {
   route_table_id = aws_route_table.private.id
-  subnet_id      = aws_subnet.private-eu-west-2b.id
+  subnet_id      = aws_subnet.private-eu-west-2a.id
 }
 
 resource "aws_security_group" "alb" {
