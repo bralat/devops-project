@@ -26,18 +26,22 @@ resource "aws_ecs_service" "helloworld" {
 
   network_configuration {
     subnets = [
-      aws_subnet.private-eu-west-2a.id,
-      aws_subnet.private-eu-west-2b.id
+      aws_subnet.public-eu-west-2a.id
     ]
     security_groups  = [aws_security_group.api.id]
-    assign_public_ip = false
+    assign_public_ip = true
   }
 
   load_balancer {
-    container_name   = "nginx"
-    container_port   = 80
+    container_name   = "laravel"
+    container_port   = 8000
     target_group_arn = aws_lb_target_group.api.arn
   }
+}
+
+resource "aws_cloudwatch_log_group" "my_log_group" {
+  name              = "/ecs/api"
+  retention_in_days = 30
 }
 
 resource "aws_ecs_task_definition" "helloworld" {
@@ -46,18 +50,51 @@ resource "aws_ecs_task_definition" "helloworld" {
   memory                   = 1024
   network_mode             = "awsvpc"
   requires_compatibilities = ["FARGATE"]
+  execution_role_arn       = data.aws_iam_role.ecs_task_execution_role.arn
 
   container_definitions = jsonencode(
     [
       {
-        name      = "nginx"
-        image     = "public.ecr.aws/nginx/nginx:stable-alpine3.19-slim"
+        name      = "laravel"
+        image     = "public.ecr.aws/bitnami/laravel:latest"
         essential = true
         portMappings = [
           {
             protocol      = "tcp"
-            hostPort      = 80
-            containerPort = 80
+            hostPort      = 8000
+            containerPort = 8000
+          }
+        ]
+
+        logConfiguration = {
+        logDriver = "awslogs"
+        options = {
+          awslogs-group         = aws_cloudwatch_log_group.my_log_group.name
+          awslogs-region        = "eu-west-2"
+          awslogs-stream-prefix = "ecs"
+        }
+      }
+
+        environment = [
+          {
+            name = "DB_HOST",
+            value = aws_rds_cluster.cluster.endpoint
+          },
+          {
+            name = "DB_PORT",
+            value = tostring(aws_rds_cluster.cluster.port)
+          },
+          {
+            name = "DB_USERNAME",
+            value = aws_rds_cluster.cluster.master_username
+          },
+          {
+            name = "DB_PASSWORD",
+            value = aws_rds_cluster.cluster.master_password
+          },
+          {
+            name = "DB_DATABASE",
+            value = aws_rds_cluster.cluster.database_name
           }
         ]
       }
