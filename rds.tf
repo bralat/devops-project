@@ -10,6 +10,11 @@ resource "aws_rds_cluster" "cluster" {
   db_subnet_group_name   = aws_db_subnet_group.subnet_group.name
   vpc_security_group_ids = [aws_security_group.database.id]
   skip_final_snapshot    = true
+
+  serverlessv2_scaling_configuration {
+    max_capacity = 4
+    min_capacity = 0.5
+  }
 }
 
 resource "aws_rds_cluster_instance" "replica" {
