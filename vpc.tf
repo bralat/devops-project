@@ -32,6 +32,13 @@ resource "aws_subnet" "private-eu-west-2b" {
   map_public_ip_on_launch = false
 }
 
+resource "aws_subnet" "private-eu-west-2c" {
+  vpc_id                  = aws_vpc.vpc.id
+  cidr_block              = "10.0.5.0/24"
+  availability_zone       = "eu-west-2c"
+  map_public_ip_on_launch = false
+}
+
 resource "aws_internet_gateway" "igw" {
   vpc_id = aws_vpc.vpc.id
 }
