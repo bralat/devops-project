@@ -5,11 +5,16 @@ resource "aws_rds_cluster" "cluster" {
   availability_zones     = ["eu-west-2a", "eu-west-2b", "eu-west-2c"]
   database_name          = "prod"
   port                   = 3306
-  master_username        = var.rds_credentials.username
-  master_password        = var.rds_credentials.password
+  master_username        = "admin"
+  manage_master_user_password = true
   db_subnet_group_name   = aws_db_subnet_group.subnet_group.name
   vpc_security_group_ids = [aws_security_group.database.id]
   skip_final_snapshot    = true
+
+  serverlessv2_scaling_configuration {
+    max_capacity = 4
+    min_capacity = 0.5
+  }
 }
 
 resource "aws_rds_cluster_instance" "replica" {
@@ -29,6 +34,7 @@ resource "aws_db_subnet_group" "subnet_group" {
 
   subnet_ids = [
     aws_subnet.private-eu-west-2a.id,
-    aws_subnet.private-eu-west-2b.id
+    aws_subnet.private-eu-west-2b.id,
+    aws_subnet.private-eu-west-2c.id,
   ]
 }

@@ -26,18 +26,22 @@ resource "aws_ecs_service" "helloworld" {
 
   network_configuration {
     subnets = [
-      aws_subnet.private-eu-west-2a.id,
-      aws_subnet.private-eu-west-2b.id
+      aws_subnet.private-eu-west-2a.id
     ]
     security_groups  = [aws_security_group.api.id]
     assign_public_ip = false
   }
 
   load_balancer {
-    container_name   = "nginx"
-    container_port   = 80
+    container_name   = "laravel"
+    container_port   = 8000
     target_group_arn = aws_lb_target_group.api.arn
   }
+}
+
+resource "aws_cloudwatch_log_group" "my_log_group" {
+  name              = "/ecs/api"
+  retention_in_days = 30
 }
 
 resource "aws_ecs_task_definition" "helloworld" {
@@ -46,25 +50,88 @@ resource "aws_ecs_task_definition" "helloworld" {
   memory                   = 1024
   network_mode             = "awsvpc"
   requires_compatibilities = ["FARGATE"]
+  execution_role_arn       = data.aws_iam_role.ecs_task_execution_role.arn
 
   container_definitions = jsonencode(
     [
       {
-        name      = "nginx"
-        image     = "public.ecr.aws/nginx/nginx:stable-alpine3.19-slim"
+        name      = "laravel"
+        image     = "public.ecr.aws/bitnami/laravel:latest"
         essential = true
         portMappings = [
           {
             protocol      = "tcp"
-            hostPort      = 80
-            containerPort = 80
+            hostPort      = 8000
+            containerPort = 8000
           }
+        ]
+
+        logConfiguration = {
+          logDriver = "awslogs"
+          options = {
+            awslogs-group         = aws_cloudwatch_log_group.my_log_group.name
+            awslogs-region        = "eu-west-2"
+            awslogs-stream-prefix = "ecs"
+          }
+        }
+
+        environment = [
+          {
+            name = "DB_HOST",
+            value = aws_rds_cluster.cluster.endpoint
+          },
+          {
+            name = "DB_PORT",
+            value = tostring(aws_rds_cluster.cluster.port)
+          },
+          {
+            name = "DB_USERNAME",
+            value = aws_rds_cluster.cluster.master_username
+          },
+          {
+            name = "DB_DATABASE",
+            value = aws_rds_cluster.cluster.database_name
+          }
+        ]
+
+        secrets = [
+          {
+            name = "DB_PASSWORD",
+            valueFrom = "${data.aws_secretsmanager_secret.rds_credentials.arn}:password::"
+          },
         ]
       }
     ]
   )
+
+  depends_on = [aws_rds_cluster_instance.replica]
 }
 
+### SECRETS MANAGER PERMISSION ###
+resource "aws_iam_policy" "ecs_task_execution_policy" {
+  name        = "ecs-task-execution-policy"
+  description = "Policy to allow ECS tasks to access Database Credentials"
+  
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Action = [
+          "secretsmanager:GetSecretValue"
+        ],
+        Effect   = "Allow",
+        Resource = data.aws_secretsmanager_secret.rds_credentials.arn
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "ecs_task_execution_role_policy_attachment" {
+  role       = data.aws_iam_role.ecs_task_execution_role.name
+  policy_arn = aws_iam_policy.ecs_task_execution_policy.arn
+}
+
+### AUTOSCALING ###
 resource "aws_appautoscaling_target" "api_autoscaling" {
   max_capacity       = 3
   min_capacity       = 1

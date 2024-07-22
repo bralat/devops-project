@@ -6,29 +6,36 @@ resource "aws_vpc" "vpc" {
 
 resource "aws_subnet" "public-eu-west-2a" {
   vpc_id                  = aws_vpc.vpc.id
-  cidr_block              = "10.0.0.0/20"
+  cidr_block              = "10.0.1.0/24"
   availability_zone       = "eu-west-2a"
   map_public_ip_on_launch = true
 }
 
 resource "aws_subnet" "public-eu-west-2b" {
   vpc_id                  = aws_vpc.vpc.id
-  cidr_block              = "10.0.128.0/20"
+  cidr_block              = "10.0.2.0/24"
   availability_zone       = "eu-west-2b"
   map_public_ip_on_launch = true
 }
 
 resource "aws_subnet" "private-eu-west-2a" {
   vpc_id                  = aws_vpc.vpc.id
-  cidr_block              = "10.0.16.0/20"
+  cidr_block              = "10.0.3.0/24"
   availability_zone       = "eu-west-2a"
   map_public_ip_on_launch = false
 }
 
 resource "aws_subnet" "private-eu-west-2b" {
   vpc_id                  = aws_vpc.vpc.id
-  cidr_block              = "10.0.144.0/20"
+  cidr_block              = "10.0.4.0/24"
   availability_zone       = "eu-west-2b"
+  map_public_ip_on_launch = false
+}
+
+resource "aws_subnet" "private-eu-west-2c" {
+  vpc_id                  = aws_vpc.vpc.id
+  cidr_block              = "10.0.5.0/24"
+  availability_zone       = "eu-west-2c"
   map_public_ip_on_launch = false
 }
 
@@ -72,7 +79,7 @@ resource "aws_route" "private_to_nat" {
 
 resource "aws_route_table_association" "private" {
   route_table_id = aws_route_table.private.id
-  subnet_id      = aws_subnet.private-eu-west-2b.id
+  subnet_id      = aws_subnet.private-eu-west-2a.id
 }
 
 resource "aws_security_group" "alb" {
@@ -132,8 +139,8 @@ resource "aws_security_group" "api" {
 
 resource "aws_security_group_rule" "only_allow_lb" {
   type                     = "ingress"
-  from_port                = 80
-  to_port                  = 80
+  from_port                = 8000
+  to_port                  = 8000
   protocol                 = "tcp"
   security_group_id        = aws_security_group.api.id # target security group
   source_security_group_id = aws_security_group.alb.id
