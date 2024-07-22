@@ -67,13 +67,13 @@ resource "aws_ecs_task_definition" "helloworld" {
         ]
 
         logConfiguration = {
-        logDriver = "awslogs"
-        options = {
-          awslogs-group         = aws_cloudwatch_log_group.my_log_group.name
-          awslogs-region        = "eu-west-2"
-          awslogs-stream-prefix = "ecs"
+          logDriver = "awslogs"
+          options = {
+            awslogs-group         = aws_cloudwatch_log_group.my_log_group.name
+            awslogs-region        = "eu-west-2"
+            awslogs-stream-prefix = "ecs"
+          }
         }
-      }
 
         environment = [
           {
@@ -89,19 +89,49 @@ resource "aws_ecs_task_definition" "helloworld" {
             value = aws_rds_cluster.cluster.master_username
           },
           {
-            name = "DB_PASSWORD",
-            value = aws_rds_cluster.cluster.master_password
-          },
-          {
             name = "DB_DATABASE",
             value = aws_rds_cluster.cluster.database_name
           }
         ]
+
+        secrets = [
+          {
+            name = "DB_PASSWORD",
+            valueFrom = "${data.aws_secretsmanager_secret.rds_credentials.arn}:password::"
+          },
+        ]
       }
     ]
   )
+
+  depends_on = [aws_rds_cluster_instance.replica]
 }
 
+### SECRETS MANAGER PERMISSION ###
+resource "aws_iam_policy" "ecs_task_execution_policy" {
+  name        = "ecs-task-execution-policy"
+  description = "Policy to allow ECS tasks to access Database Credentials"
+  
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Action = [
+          "secretsmanager:GetSecretValue"
+        ],
+        Effect   = "Allow",
+        Resource = data.aws_secretsmanager_secret.rds_credentials.arn
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "ecs_task_execution_role_policy_attachment" {
+  role       = data.aws_iam_role.ecs_task_execution_role.name
+  policy_arn = aws_iam_policy.ecs_task_execution_policy.arn
+}
+
+### AUTOSCALING ###
 resource "aws_appautoscaling_target" "api_autoscaling" {
   max_capacity       = 3
   min_capacity       = 1
