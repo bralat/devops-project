@@ -97,14 +97,14 @@ resource "aws_ecs_task_definition" "helloworld" {
         secrets = [
           {
             name = "DB_PASSWORD",
-            valueFrom = "${data.aws_secretsmanager_secret.rds_credentials.arn}:password::"
+            valueFrom = "${aws_rds_cluster.cluster.master_user_secret[0].secret_arn}:password::"
           },
         ]
       }
     ]
   )
 
-  depends_on = [aws_rds_cluster_instance.replica]
+  depends_on = [aws_iam_policy.ecs_task_execution_policy]
 }
 
 ### SECRETS MANAGER PERMISSION ###
@@ -120,10 +120,12 @@ resource "aws_iam_policy" "ecs_task_execution_policy" {
           "secretsmanager:GetSecretValue"
         ],
         Effect   = "Allow",
-        Resource = data.aws_secretsmanager_secret.rds_credentials.arn
+        Resource = aws_rds_cluster.cluster.master_user_secret[0].secret_arn
       }
     ]
   })
+
+  depends_on = [aws_rds_cluster_instance.replica]
 }
 
 resource "aws_iam_role_policy_attachment" "ecs_task_execution_role_policy_attachment" {
